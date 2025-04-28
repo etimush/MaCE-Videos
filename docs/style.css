@@ -1,0 +1,130 @@
+/* Basic Reset & Body Styles */
+* {
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #111; /* Light grey background */
+    color: #333;
+}
+
+/* Header and Main Title Styling */
+header {
+    background-color: #333; /* Dark background for header */
+    color: #fff;           /* White text */
+    padding: 20px 0;
+    text-align: center;
+    margin-bottom: 30px; /* Space below header */
+}
+
+#main-title {
+    font-size: 3rem; /* Big title */
+    margin: 0;       /* Remove default margin */
+    font-weight: bold;
+}
+
+/* Main Content Area */
+main {
+    max-width: 1800px; /* Adjust max width as needed */
+    margin: 0 auto;    /* Center the content */
+    padding: 0 5px;   /* Minimal padding on the sides of the page */
+}
+
+/* Video Container - Using Multi-column Layout */
+.video-grid { /* Keeping class name for consistency, but using column layout */
+    /* --- Multi-column Properties --- */
+    /* Set the desired width for columns. Browser creates as many as fit */
+    column-width: 200px; /* ADJUST this value for desired base video width */
+
+    /* Set the gap BETWEEN columns. Use 0 for absolutely no horizontal gap */
+    column-gap: 5px;
+
+    /* --- End Multi-column --- */
+
+    padding-bottom: 30px; /* Space at the very bottom of the page */
+}
+
+/* Individual Video Item Styling */
+.video-item {
+    /* Prevent items from breaking awkwardly across columns */
+    break-inside: avoid;
+
+    /* Vertical space BETWEEN items stacked in the SAME column. Use 0 for no vertical gap */
+    margin-bottom: 5px;
+
+    /* Display type suitable for columns */
+    display: inline-block; /* Helps items flow correctly in columns */
+    width: 100%;           /* Item takes full width of its column */
+
+    /* Optional: Styling for the item box if showing captions */
+    background-color: #fff; /* Background needed if caption is visible */
+    border-radius: 5px;     /* Optional rounding */
+    overflow: hidden;       /* Keeps video/caption corners neat */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Video Element Styling */
+.video-item video {
+    display: block;        /* Prevents extra space below */
+    width: 100%;         /* Fill the container width */
+    height: auto;          /* CRITICAL: Maintain original aspect ratio */
+    background-color: #000; /* Optional: Background while loading */
+    margin: 0;             /* Remove any default margin */
+    padding: 0;            /* Remove any default padding */
+
+    /* Ensure video corners don't poke out if item has rounded corners */
+    vertical-align: bottom; /* Helps alignment with inline-block */
+
+    /* Optional: Round top corners if caption is shown below */
+    border-radius: 5px 5px 0 0;
+}
+
+/* Caption Styling (Filename below video) */
+.video-item .caption {
+    /* --- Explicitly remove default paragraph margins --- */
+    margin: 0;
+
+    /* --- Adjust padding (make vertical padding very small or zero) --- */
+    /* Use 0px or 1px/2px top/bottom padding */
+    padding: 2px 10px; /* EXAMPLE: Very small vertical padding */
+    /* Or even zero: */
+    /* padding: 0 10px; */
+
+    font-size: 0.9rem;
+    text-align: center;
+
+    /* --- Optionally adjust line-height for tighter fit --- */
+    /* line-height: 1; makes line height equal to font size */
+    /* line-height: 1.2; gives a tiny bit more space */
+    line-height: 1.2; /* Adjust as needed */
+
+    background-color: #555; /* Your chosen background color */
+    color: #fff;           /* Your chosen text color */
+
+    word-wrap: break-word;
+    border-radius: 0 0 5px 5px;
+}
+
+/* Responsive Adjustments (column-width is inherently responsive) */
+@media (max-width: 600px) {
+    #main-title {
+        font-size: 2rem; /* Slightly smaller title */
+    }
+    .video-grid {
+        /* Optionally adjust column width for smaller screens */
+        column-width: 240px;
+        column-gap: 5px; /* Keep gap consistent or adjust */
+    }
+     .video-item {
+        margin-bottom: 5px; /* Keep vertical gap consistent or adjust */
+     }
+     .video-item .caption {
+        font-size: 0.8rem; /* Slightly smaller text */
+        padding: 6px 8px;
+    }
+}
+
+/* You could add more breakpoints if needed for very large or very small screens */
+/* e.g., @media (min-width: 1600px) { .video-grid { column-width: 320px; } } */
