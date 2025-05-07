@@ -125,6 +125,30 @@ main {
         padding: 6px 8px;
     }
 }
+/* --- New/Modified Styles for Sub-Section Headers --- */
+.video-section-header { /* This is for your H2s */
+    background-color: #1a1a1a; /* A dark gray, can be same as header or slightly different */
+    color: #d0d0d0;            /* Light text color, can be same as main title's text */
+    text-align: center;
+    padding: 0.6em 0.5em;       /* Adjust padding; 0.5em for L/R if inside a constrained main */
+    font-size: 1.8em;           /* Smaller font size than the main title */
+    font-weight: normal;        /* Could be normal or bold, depends on preference */
+    margin-top: 3em;            /* More space above a new section header */
+    margin-bottom: 1.5em;       /* Space between this header and its video grid */
 
+    /* Optional: a subtle border if you like */
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+
+    /* If your <main> element has horizontal padding and you want these headers
+       to visually break out to the edges of the <main> container's max-width
+       (but not necessarily full viewport width if <main> is centered):
+       This is generally not needed if the background is applied and <main> provides
+       the overall padding for its content.
+    */
+
+    /* Optional: if you want rounded corners for these bars */
+    /* border-radius: 4px; */
+}
 /* You could add more breakpoints if needed for very large or very small screens */
 /* e.g., @media (min-width: 1600px) { .video-grid { column-width: 320px; } } */
