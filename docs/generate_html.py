@@ -2,11 +2,12 @@ import os
 import sys  # To exit script on error
 
 # --- Configuration ---
+RAW_BASE = "https://raw.githubusercontent.com/etimush/MaCE-Videos/main/docs/"
 VIDEO_DIR = "Videos"
 OUTPUT_HTML_FILE = "index.html"
 CSS_FILE = "style.css"
-MAIN_TITLE = "Samples of MaCELenia Worlds"
-SUPPORTED_EXTENSIONS = ['.mp4', '.webm', '.ogg']  # Ensure your converted files match these
+MAIN_TITLE = "Sample MaCE Videos"
+SUPPORTED_EXTENSIONS = ['.mp4', '.webm', '.ogg']
 
 # --- Get Base Directory ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,8 +17,7 @@ output_html_full_path = os.path.join(script_dir, OUTPUT_HTML_FILE)
 print(f"Looking for videos in subdirectories of: {videos_full_path}")
 
 # --- Scan Video Directory for Subdirectories and their Videos ---
-sections = {}  # Key: subdir_name, Value: list of video filenames in it
-
+sections = {}
 try:
     if not os.path.isdir(videos_full_path):
         print(f"Error: Directory not found - '{videos_full_path}'")
@@ -25,7 +25,6 @@ try:
 
     for item_name in sorted(os.listdir(videos_full_path)):
         item_full_path = os.path.join(videos_full_path, item_name)
-
         if os.path.isdir(item_full_path):
             subdir_name = item_name
             videos_in_subdir = []
@@ -37,7 +36,6 @@ try:
                         videos_in_subdir.append(filename)
             except Exception as e:
                 print(f"Warning: Could not fully read subdirectory '{item_full_path}': {e}")
-
             if videos_in_subdir:
                 sections[subdir_name] = videos_in_subdir
 
@@ -58,7 +56,6 @@ except Exception as e:
 total_videos_processed = sum(len(v_list) for v_list in sections.values())
 
 # --- HTML Template Parts ---
-# MODIFIED: Removed the main <div class="video-grid"> from html_start
 html_start = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,18 +65,82 @@ html_start = f"""<!DOCTYPE html>
     <link rel="stylesheet" href="{CSS_FILE}">
 </head>
 <body>
-
     <header>
         <h1 id="main-title">{MAIN_TITLE}</h1>
     </header>
-
     <main>
 """
 
-# MODIFIED: Removed the closing </div> for the main video-grid from html_end
+# MODIFIED: Updated JavaScript for play/pause on scroll
 html_end = """
     </main>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const lazyVideos = [].slice.call(document.querySelectorAll("video.lazy-video"));
+
+            if ("IntersectionObserver" in window) {
+                const videoObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        const video = entry.target;
+                        if (entry.isIntersecting) {
+                            // Video is in view
+                            const firstSource = video.querySelector("source[data-src]");
+                            if (firstSource) {
+                                // First time: Set sources, load, and play
+                                video.querySelectorAll("source[data-src]").forEach(source => {
+                                    source.src = source.dataset.src;
+                                    source.removeAttribute('data-src'); // Prevent re-processing
+                                });
+                                video.load();
+                                video.play().catch(error => {
+                                    console.log(`Autoplay prevented for ${video.id} on initial load:`, error);
+                                    // User might need to interact if autoplay is blocked even with muted.
+                                });
+                            } else if (video.paused) {
+                                // Video was already loaded but is paused, play it
+                                video.play().catch(error => {
+                                    console.log(`Autoplay prevented for ${video.id} on re-entering view:`, error);
+                                });
+                            }
+                        } else {
+                            // Video is out of view, pause it
+                            if (!video.paused) {
+                                video.pause();
+                            }
+                        }
+                    });
+                }, {
+                    // Adjust rootMargin and threshold as needed:
+                    // rootMargin: "0px 0px 200px 0px" means the "viewport" for intersection checks
+                    // extends 200px below the actual viewport. Videos within this margin start loading/playing.
+                    // threshold: 0.25 means 25% of the video needs to be visible within the rootMargin area
+                    // for 'isIntersecting' to be true.
+                    rootMargin: "0px 0px 150px 0px", // Start loading/playing when video is 150px from viewport bottom
+                    threshold: 0.2 // Play when at least 20% of the video is visible in the observer's root
+                });
+
+                lazyVideos.forEach(function(lazyVideo) {
+                    videoObserver.observe(lazyVideo); // Observe for continuous play/pause
+                });
+
+            } else {
+                // Fallback for browsers that don't support IntersectionObserver
+                // Load all videos immediately and try to play (might cause performance issues)
+                console.warn("IntersectionObserver not supported. All videos will attempt to load and play at once.");
+                lazyVideos.forEach(function(video) {
+                    video.querySelectorAll("source[data-src]").forEach(source => {
+                        source.src = source.dataset.src;
+                        source.removeAttribute('data-src');
+                    });
+                    video.load();
+                    video.play().catch(error => {
+                        console.log("Video play prevented (fallback) for " + video.id + ": ", error);
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
 """
@@ -87,38 +148,33 @@ html_end = """
 # --- Generate HTML for Each Video Section ---
 video_items_html = ""
 if not sections:
-    # This message will now be directly inside <main> if no sections are found
     video_items_html = f'            <p>No videos found in subdirectories of "{VIDEO_DIR}".</p>\n'
 else:
+    video_counter = 0 # For unique IDs
     for section_name, video_files_in_section in sections.items():
-        # Add section header (still useful to have a class for styling the H2 itself)
         video_items_html += f'            <h2 class="video-section-header">{section_name}</h2>\n'
-
-        # Start a new video-grid for this section
         video_items_html += '            <div class="video-grid">\n'
 
         for filename in video_files_in_section:
+            video_counter += 1
+            video_id = f"video-{video_counter}" # Unique ID for each video
             base_name = os.path.splitext(filename)[0]
-            video_path = os.path.join(VIDEO_DIR, section_name, filename).replace("\\", "/")
+            video_path_relative = os.path.join(VIDEO_DIR, section_name, filename).replace("\\", "/")
             file_ext = os.path.splitext(filename)[1].lower()
             mime_type = ""
-            if file_ext == '.mp4':
-                mime_type = 'video/mp4'
-            elif file_ext == '.webm':
-                mime_type = 'video/webm'
-            elif file_ext == '.ogg':
-                mime_type = 'video/ogg'
+            if file_ext == '.mp4': mime_type = 'video/mp4'
+            elif file_ext == '.webm': mime_type = 'video/webm'
+            elif file_ext == '.ogg': mime_type = 'video/ogg'
 
             video_items_html += f"""
                 <div class="video-item">
-                    <video controls autoplay loop muted playsinline preload="metadata">
-                        <source src="{video_path}" type="{mime_type}">
+                    <video id="{video_id}" class="lazy-video" controls loop muted playsinline preload="metadata">
+                        <source data-src="{RAW_BASE + video_path_relative}" type="{mime_type}">
                         Your browser does not support the video tag. ({filename})
                     </video>
-                    <p class="caption">{base_name}</p> {""}
+                    <p class="caption">{base_name}</p>
                 </div>
 """
-        # Close the video-grid for this section
         video_items_html += '            </div> <!-- end .video-grid for section -->\n'
 
 # --- Combine and Write HTML File ---
